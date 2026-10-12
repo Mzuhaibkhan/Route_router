@@ -1,0 +1,23 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: route-radar:latest
+    container_name: route-radar-app
+    ports:
+      - "10000:10000"
+    environment:
+      - PORT=10000
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - DJANGO_DEBUG=False
+      - DJANGO_SECRET_KEY=local-docker-insecure-test-secret-key-change-in-prod
+      - ORS_API_KEY=${ORS_API_KEY:-}
+      - SECURE_SSL_REDIRECT=False
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:10000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

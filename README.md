@@ -132,6 +132,18 @@ python backend/manage.py collectstatic --noinput
 # 3. Start unified production server
 gunicorn config.wsgi:application --chdir backend --workers 1 --threads 4 --timeout 120
 # Entire application (Frontend SPA + Backend APIs) live at http://localhost:8000
+`
+
+### Option C: Docker Container Deployment (Local & Render)
+
+`ash
+# Build and run multi-stage container with Docker Compose:
+docker compose up --build
+
+# Or build and run standalone container:
+docker build -t route-radar .
+docker run -p 10000:10000 -e DJANGO_SECRET_KEY=prod-secret -e ORS_API_KEY=your-key route-radar
+# App is live at http://localhost:10000 (Healthcheck at /healthz)
 ```
 
 ---
