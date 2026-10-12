@@ -1,3 +1,3 @@
 """
-Tests package for Spotter AI API.
+Tests package for Route Radar API.
 """

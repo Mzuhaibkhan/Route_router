@@ -1,8 +1,8 @@
 """
-Recommendation engine for Spotter AI routes.
+Recommendation engine for Route Radar routes.
 Implements bucketed multi-criteria ranking, tag assignment, and natural-language explanations.
 """
-from backend.services.data_types import Route, RouteRecommendation
+from services.data_types import Route, RouteRecommendation
 
 BUCKET_SIZE = 5  # Round miles to nearest 5 before comparing
 

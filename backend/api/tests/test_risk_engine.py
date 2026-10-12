@@ -1,5 +1,5 @@
 """
-Comprehensive test suite for the Spotter AI Risk Classification Engine.
+Comprehensive test suite for the Route Radar Risk Classification Engine.
 Validates all 44 Phase 1 test specifications (RE_01–RE_33, LR_01–LR_11).
 """
 import pytest

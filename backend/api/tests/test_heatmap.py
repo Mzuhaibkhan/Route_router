@@ -1,10 +1,10 @@
 """
-Test suite for Spotter AI Corridor Heatmap engine.
+Test suite for Route Radar Corridor Heatmap engine.
 Tests HM_01 through HM_05: Corridor bounds, truck load integration, 49h horizons,
 and coordinate snapping.
 """
-from backend.services.data_types import Coord, WeatherReading
-from backend.services.heatmap import (
+from services.data_types import Coord, WeatherReading
+from services.heatmap import (
     compute_heatmap_data,
     generate_corridor_grid,
     min_distance_to_polyline_miles,

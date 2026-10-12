@@ -9,9 +9,8 @@ from typing import Protocol, runtime_checkable
 import polyline
 import requests
 from django.conf import settings
-from shapely.geometry import LineString
-
 from services.data_types import Coord, RouteResult, VehicleParams
+from shapely.geometry import LineString
 
 logger = logging.getLogger(__name__)
 
@@ -454,3 +453,7 @@ class ORSRoutingProvider:
             step_distances_m=step_dist,
             step_durations_s=step_dur,
         )
+
+
+DEFAULT_ROUTING_PROVIDER = ORSRoutingProvider()
+

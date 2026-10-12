@@ -1,5 +1,5 @@
 """
-URL configuration for Spotter AI API endpoints.
+URL configuration for Route Radar API endpoints.
 """
 from api import views
 from django.urls import path

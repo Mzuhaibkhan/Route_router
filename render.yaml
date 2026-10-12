@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: route-radar
+    env: python
+    plan: starter
+    buildCommand: ./build.sh
+    startCommand: gunicorn config.wsgi:application --chdir backend --workers 1 --threads 4 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: NODE_VERSION
+        value: 20.10.0
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: ORS_API_KEY
+        sync: false
+      - key: SECURE_SSL_REDIRECT
+        value: "True"

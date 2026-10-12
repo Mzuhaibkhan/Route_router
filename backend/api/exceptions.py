@@ -1,5 +1,5 @@
 """
-Custom exception handler for Spotter AI DRF endpoints.
+Custom exception handler for Route Radar DRF endpoints.
 """
 from rest_framework import status
 from rest_framework.response import Response

@@ -1,5 +1,5 @@
 """
-Data types for the Spotter AI route analysis pipeline.
+Data types for the Route Radar route analysis pipeline.
 All structured data uses dataclasses with type hints — no string-keyed dicts.
 """
 from dataclasses import dataclass, field

@@ -1,5 +1,5 @@
 """
-REST API Views and route analysis pipeline controller for Spotter AI.
+REST API Views and route analysis pipeline controller for Route Radar.
 Coordinates geocoding, multi-tier routing, checkpoint sampling, weather fetching,
 ranking, heatmap precomputation, and departure window optimization.
 """
@@ -9,22 +9,21 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import polyline
+from api.serializers import RouteAnalyzeSerializer
 from django.core.cache import cache
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
-
-from backend.api.serializers import RouteAnalyzeSerializer
-from backend.services.cache_utils import (
+from services.cache_utils import (
     get_or_compute,
     make_route_cache_key,
     make_weather_cache_key,
 )
-from backend.services.checkpoints import (
+from services.checkpoints import (
     sample_checkpoints,
 )
-from backend.services.data_types import (
+from services.data_types import (
     RISK_LEGEND,
     RISK_LEVELS,
     AnalysisResponse,
@@ -34,12 +33,12 @@ from backend.services.data_types import (
     RouteSummary,
     VehicleParams,
 )
-from backend.services.departure import find_best_departure
-from backend.services.geocoding import DEFAULT_GEOCODING_SERVICE
-from backend.services.heatmap import compute_heatmap_data, generate_corridor_grid
-from backend.services.recommendation import rank_routes
-from backend.services.routing import DEFAULT_ROUTING_PROVIDER
-from backend.services.weather import (
+from services.departure import find_best_departure
+from services.geocoding import DEFAULT_GEOCODING_SERVICE
+from services.heatmap import compute_heatmap_data, generate_corridor_grid
+from services.recommendation import rank_routes
+from services.routing import DEFAULT_ROUTING_PROVIDER
+from services.weather import (
     WeatherServiceError,
     apply_weather_and_risk_to_checkpoints,
     fetch_weather_batch,

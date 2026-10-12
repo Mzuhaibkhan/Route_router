@@ -7,7 +7,6 @@ import math
 from datetime import datetime
 
 import requests
-
 from services.data_types import Checkpoint, CheckpointRisk, Coord, WeatherReading
 from services.risk_engine import compute_checkpoint_risk, get_risk_label
 

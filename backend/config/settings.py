@@ -1,5 +1,5 @@
 """
-Django settings for Spotter AI project.
+Django settings for Route Radar / Fleet Weather Risk Engine.
 """
 import os
 from pathlib import Path
@@ -12,7 +12,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-dev-key-change-in-production')
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',')
+default_hosts = 'localhost,127.0.0.1,testserver,*.onrender.com'
+ALLOWED_HOSTS = [
+    h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', default_hosts).split(',') if h.strip()
+]
 
 INSTALLED_APPS = [
     'django.contrib.auth',
@@ -31,10 +34,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+FRONTEND_DIST_DIR = BASE_DIR.parent / 'frontend' / 'dist'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [FRONTEND_DIST_DIR] if FRONTEND_DIST_DIR.exists() else [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -61,12 +66,40 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+STATICFILES_DIRS = []
+if (FRONTEND_DIST_DIR / 'assets').exists():
+    STATICFILES_DIRS.append(FRONTEND_DIST_DIR / 'assets')
+
+if FRONTEND_DIST_DIR.exists():
+    WHITENOISE_ROOT = FRONTEND_DIST_DIR
+
+# WhiteNoise storage: gzip + brotli compression and manifest caching
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Reverse Proxy / HTTPS Settings (Render deployment)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+NUM_PROXIES = 1
 
 # CORS
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
-CORS_ALLOWED_ORIGINS = [FRONTEND_URL]
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOWED_ORIGINS = [FRONTEND_URL] if FRONTEND_URL else []
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost:5173,https://*.onrender.com').split(',')
+    if origin.strip()
+]
 
 # REST Framework
 REST_FRAMEWORK = {
@@ -76,13 +109,14 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [],
     'DEFAULT_PERMISSION_CLASSES': [],
     'EXCEPTION_HANDLER': 'api.exceptions.custom_exception_handler',
+    'NUM_PROXIES': 1,
 }
 
 # Caching
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'spotter-ai-cache',
+        'LOCATION': 'fleet-radar-cache',
         'TIMEOUT': 3600,  # 1 hour default
     }
 }

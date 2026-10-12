@@ -4,8 +4,8 @@ Builds snapped grid cells within 20 miles of route polylines and computes 49-hou
 """
 import math
 
-from backend.services.data_types import Coord, HeatmapCell, WeatherReading
-from backend.services.risk_engine import apply_load_rules, classify_weather
+from services.data_types import Coord, HeatmapCell, WeatherReading
+from services.risk_engine import apply_load_rules, classify_weather
 
 
 def haversine_distance_miles(c1: Coord, c2: Coord) -> float:

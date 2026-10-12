@@ -1,1 +1,1 @@
-"""Spotter AI backend package."""
+"""Route Radar backend package."""
