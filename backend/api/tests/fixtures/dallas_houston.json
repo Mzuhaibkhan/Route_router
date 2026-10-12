@@ -1,0 +1,165 @@
+{
+  "origin": {
+    "name": "Dallas, TX",
+    "lat": 32.7767,
+    "lng": -96.7970
+  },
+  "destination": {
+    "name": "Houston, TX",
+    "lat": 29.7604,
+    "lng": -95.3698
+  },
+  "departure_utc": 1760515200,
+  "load_weight_lbs": 35000,
+  "effective_interval_miles": 25,
+  "risk_legend": {
+    "0": {"label": "Low", "color": "#22c55e"},
+    "1": {"label": "Moderate", "color": "#f59e0b"},
+    "2": {"label": "High", "color": "#f97316"},
+    "3": {"label": "Severe", "color": "#ef4444"},
+    "4": {"label": "No Travel", "color": "#7c2d12"}
+  },
+  "routes": [
+    {
+      "index": 0,
+      "name": "Route 1 (via I-45 S)",
+      "encoded_geometry": "g}ymEvr{pQ~_@sT`e@k_@|j@k]d\\eR",
+      "distance_miles": 239.5,
+      "duration_seconds": 13140,
+      "duration_display": "3h 39m",
+      "via_roads": ["I-45 S"],
+      "summary": {
+        "no_travel_miles": 0.0,
+        "severe_miles": 0.0,
+        "high_miles": 25.0,
+        "moderate_miles": 50.0,
+        "low_miles": 164.5,
+        "mile_weighted_avg_risk": 0.6,
+        "data_coverage_pct": 100.0,
+        "max_risk_label": "High"
+      },
+      "recommendation": {
+        "is_recommended": true,
+        "rank": 1,
+        "tags": ["★ Recommended", "Safest", "Fastest"],
+        "explanation": "Safest route with 0 Severe miles and minimal weather disruption."
+      },
+      "checkpoints": [
+        {
+          "index": 0,
+          "coord": {"lat": 32.7767, "lng": -96.7970},
+          "cumulative_miles": 0.0,
+          "segment_miles": 12.5,
+          "eta_utc": 1760515200,
+          "weather": {
+            "timestamp_utc": 1760515200,
+            "wind_mph": 18.5,
+            "wind_gusts_mph": 28.0,
+            "rain_in_hr": 0.02,
+            "snow_in_hr": 0.0,
+            "temperature_f": 72.0
+          },
+          "risk": {
+            "base_level": 0,
+            "adjusted_level": 0,
+            "label": "Low",
+            "segment_miles": 12.5,
+            "contributing_factors": [],
+            "data_available": true
+          }
+        },
+        {
+          "index": 1,
+          "coord": {"lat": 32.4285, "lng": -96.6521},
+          "cumulative_miles": 25.0,
+          "segment_miles": 25.0,
+          "eta_utc": 1760516600,
+          "weather": {
+            "timestamp_utc": 1760518800,
+            "wind_mph": 28.0,
+            "wind_gusts_mph": 35.0,
+            "rain_in_hr": 0.12,
+            "snow_in_hr": 0.0,
+            "temperature_f": 71.0
+          },
+          "risk": {
+            "base_level": 1,
+            "adjusted_level": 1,
+            "label": "Moderate",
+            "segment_miles": 25.0,
+            "contributing_factors": ["Wind 28 mph → Moderate"],
+            "data_available": true
+          }
+        },
+        {
+          "index": 2,
+          "coord": {"lat": 32.0722, "lng": -96.4712},
+          "cumulative_miles": 50.0,
+          "segment_miles": 25.0,
+          "eta_utc": 1760518000,
+          "weather": {
+            "timestamp_utc": 1760518800,
+            "wind_mph": 38.0,
+            "wind_gusts_mph": 46.0,
+            "rain_in_hr": 0.28,
+            "snow_in_hr": 0.0,
+            "temperature_f": 69.0
+          },
+          "risk": {
+            "base_level": 2,
+            "adjusted_level": 2,
+            "label": "High",
+            "segment_miles": 25.0,
+            "contributing_factors": ["Wind 38 mph → High", "Rain 0.28 in/hr → High"],
+            "data_available": true
+          }
+        },
+        {
+          "index": 3,
+          "coord": {"lat": 29.7604, "lng": -95.3698},
+          "cumulative_miles": 239.5,
+          "segment_miles": 12.5,
+          "eta_utc": 1760528340,
+          "weather": {
+            "timestamp_utc": 1760529600,
+            "wind_mph": 12.0,
+            "wind_gusts_mph": 18.0,
+            "rain_in_hr": 0.0,
+            "snow_in_hr": 0.0,
+            "temperature_f": 76.0
+          },
+          "risk": {
+            "base_level": 0,
+            "adjusted_level": 0,
+            "label": "Low",
+            "segment_miles": 12.5,
+            "contributing_factors": [],
+            "data_available": true
+          }
+        }
+      ]
+    }
+  ],
+  "heatmap": [
+    {
+      "coord": {"lat": 32.75, "lng": -96.75},
+      "forecasts": {
+        "1760515200": 0,
+        "1760518800": 1,
+        "1760522400": 2
+      }
+    }
+  ],
+  "best_departure_window": {
+    "best_departure_utc": 1760526000,
+    "route_index": 0,
+    "improvement": "Waiting 3h reduces High risk miles from 25 to 0"
+  },
+  "warnings": [
+    {
+      "level": "info",
+      "code": "tz_interpretation",
+      "message": "Departure interpreted as 8:00 AM CDT (origin local time)."
+    }
+  ]
+}

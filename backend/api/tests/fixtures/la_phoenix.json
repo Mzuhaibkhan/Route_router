@@ -1,0 +1,145 @@
+{
+  "origin": {
+    "name": "Los Angeles, CA",
+    "lat": 34.0522,
+    "lng": -118.2437
+  },
+  "destination": {
+    "name": "Phoenix, AZ",
+    "lat": 33.4484,
+    "lng": -112.0740
+  },
+  "departure_utc": 1760515200,
+  "load_weight_lbs": 42000,
+  "effective_interval_miles": 25,
+  "risk_legend": {
+    "0": {"label": "Low", "color": "#22c55e"},
+    "1": {"label": "Moderate", "color": "#f59e0b"},
+    "2": {"label": "High", "color": "#f97316"},
+    "3": {"label": "Severe", "color": "#ef4444"},
+    "4": {"label": "No Travel", "color": "#7c2d12"}
+  },
+  "routes": [
+    {
+      "index": 0,
+      "name": "Route 1 (via I-10 E)",
+      "encoded_geometry": "mrmnEn`unU_`@k`@~d@a`@|e@i]h[gQ",
+      "distance_miles": 372.4,
+      "duration_seconds": 20520,
+      "duration_display": "5h 42m",
+      "via_roads": ["I-10 E"],
+      "summary": {
+        "no_travel_miles": 0.0,
+        "severe_miles": 25.0,
+        "high_miles": 50.0,
+        "moderate_miles": 75.0,
+        "low_miles": 222.4,
+        "mile_weighted_avg_risk": 0.9,
+        "data_coverage_pct": 100.0,
+        "max_risk_label": "Severe"
+      },
+      "recommendation": {
+        "is_recommended": true,
+        "rank": 1,
+        "tags": ["★ Recommended", "Fastest"],
+        "explanation": "Direct interstate corridor with crosswind gusts in San Gorgonio Pass."
+      },
+      "checkpoints": [
+        {
+          "index": 0,
+          "coord": {"lat": 34.0522, "lng": -118.2437},
+          "cumulative_miles": 0.0,
+          "segment_miles": 12.5,
+          "eta_utc": 1760515200,
+          "weather": {
+            "timestamp_utc": 1760515200,
+            "wind_mph": 12.0,
+            "wind_gusts_mph": 16.0,
+            "rain_in_hr": 0.0,
+            "snow_in_hr": 0.0,
+            "temperature_f": 68.0
+          },
+          "risk": {
+            "base_level": 0,
+            "adjusted_level": 0,
+            "label": "Low",
+            "segment_miles": 12.5,
+            "contributing_factors": [],
+            "data_available": true
+          }
+        },
+        {
+          "index": 1,
+          "coord": {"lat": 33.9185, "lng": -116.8211},
+          "cumulative_miles": 85.0,
+          "segment_miles": 25.0,
+          "eta_utc": 1760520000,
+          "weather": {
+            "timestamp_utc": 1760522400,
+            "wind_mph": 42.0,
+            "wind_gusts_mph": 54.0,
+            "rain_in_hr": 0.0,
+            "snow_in_hr": 0.0,
+            "temperature_f": 62.0
+          },
+          "risk": {
+            "base_level": 2,
+            "adjusted_level": 3,
+            "label": "Severe",
+            "segment_miles": 25.0,
+            "contributing_factors": [
+              "Wind 42 mph → High",
+              "Wind 42 mph + load 42,000 lb (>40,000) → Severe"
+            ],
+            "data_available": true
+          }
+        },
+        {
+          "index": 2,
+          "coord": {"lat": 33.4484, "lng": -112.0740},
+          "cumulative_miles": 372.4,
+          "segment_miles": 12.5,
+          "eta_utc": 1760535720,
+          "weather": {
+            "timestamp_utc": 1760536800,
+            "wind_mph": 8.0,
+            "wind_gusts_mph": 12.0,
+            "rain_in_hr": 0.0,
+            "snow_in_hr": 0.0,
+            "temperature_f": 82.0
+          },
+          "risk": {
+            "base_level": 0,
+            "adjusted_level": 0,
+            "label": "Low",
+            "segment_miles": 12.5,
+            "contributing_factors": [],
+            "data_available": true
+          }
+        }
+      ]
+    }
+  ],
+  "heatmap": [
+    {
+      "coord": {"lat": 33.5, "lng": -116.75},
+      "forecasts": {
+        "1760515200": 0,
+        "1760522400": 3,
+        "1760529600": 1
+      }
+    }
+  ],
+  "best_departure_window": {
+    "best_departure_utc": 1760529600,
+    "route_index": 0,
+    "improvement": "Departing 4h later avoids high mountain pass crosswinds"
+  },
+  "warnings": [
+    {
+      "level": "info",
+      "code": "tz_interpretation",
+      "message": "Departure interpreted as 8:00 AM PDT (origin local time)."
+    }
+  ]
+}
