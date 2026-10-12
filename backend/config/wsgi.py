@@ -1,4 +1,4 @@
-"""WSGI config for Spotter AI project."""
+"""WSGI config for Route Radar project."""
 import os
 
 from django.core.wsgi import get_wsgi_application

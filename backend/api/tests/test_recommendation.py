@@ -1,9 +1,9 @@
 """
-Test suite for Spotter AI Recommendation Engine.
+Test suite for Route Radar Recommendation Engine.
 Tests RC_01 through RC_10: 5-mile bucketing, multi-criteria ranking, tags, and explanations.
 """
-from backend.services.data_types import Route, RouteSummary
-from backend.services.recommendation import (
+from services.data_types import Route, RouteSummary
+from services.recommendation import (
     bucket_miles,
     rank_routes,
     recommendation_sort_key,

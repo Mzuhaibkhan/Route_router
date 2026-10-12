@@ -1,5 +1,5 @@
 """
-Integration test suite for Spotter AI pipeline.
+Integration test suite for Route Radar pipeline.
 Tests IT_01 through IT_08: End-to-end pipeline, downtime recovery, schema validation,
 demo fixtures, cache key consistency, throttling, and cache stampede mutex.
 """
@@ -11,10 +11,9 @@ from unittest.mock import patch
 import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
-
-from backend.services.cache_utils import get_or_compute, make_route_cache_key
-from backend.services.data_types import RouteResult
-from backend.services.weather import WeatherServiceError
+from services.cache_utils import get_or_compute, make_route_cache_key
+from services.data_types import RouteResult
+from services.weather import WeatherServiceError
 
 
 @pytest.fixture

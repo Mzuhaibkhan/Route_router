@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: route-radar
+    env: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: ORS_API_KEY
+        sync: false
+      - key: SECURE_SSL_REDIRECT
+        value: "True"

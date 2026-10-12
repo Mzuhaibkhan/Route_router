@@ -1,14 +1,13 @@
 """
-Test suite for Spotter AI Input Validation & API Views.
+Test suite for Route Radar Input Validation & API Views.
 Tests IV_01 through IV_14: Origin/dest checks, weight ranges, departure limits,
 DST snapping, and timezone resolution.
 """
 from datetime import datetime, timezone
 
 import pytest
+from api.serializers import RouteAnalyzeSerializer
 from rest_framework.test import APIClient
-
-from backend.api.serializers import RouteAnalyzeSerializer
 
 
 @pytest.fixture

@@ -5,20 +5,20 @@ Enforces non-linear ETA interpolation using ORS step durations and Voronoi halfw
 import math
 from datetime import datetime
 
-from shapely.geometry import LineString, Point
-
 from services.data_types import Checkpoint, Coord
+from shapely.geometry import LineString, Point
 
 METERS_TO_MILES = 0.000621371
 MILES_TO_METERS = 1609.344
 
 
 def sample_checkpoints(
-    decoded_coords: list[Coord],
-    step_distances_m: list[float],
-    step_durations_s: list[float],
-    departure_utc: int | datetime,
+    decoded_coords: list[Coord] | None = None,
+    step_distances_m: list[float] | None = None,
+    step_durations_s: list[float] | None = None,
+    departure_utc: int | datetime = 0,
     interval_miles: int = 25,
+    coords: list[Coord] | None = None,
 ) -> list[Checkpoint]:
     """
     Sample checkpoints every `interval_miles` along the route polyline.
@@ -30,6 +30,13 @@ def sample_checkpoints(
     4. Attributed segment_miles uses Voronoi halfway split; sum equals total miles.
     5. Non-linear ETA computed using cumulative ORS step durations.
     """
+    if decoded_coords is None:
+        decoded_coords = coords or []
+    if step_distances_m is None:
+        step_distances_m = []
+    if step_durations_s is None:
+        step_durations_s = []
+
     if not decoded_coords:
         return []
 

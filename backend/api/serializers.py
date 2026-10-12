@@ -1,19 +1,18 @@
 """
-DRF Serializers and comprehensive input validation for Spotter AI API endpoints.
+DRF Serializers and comprehensive input validation for Route Radar API endpoints.
 Validates origin, destination, truck weight, departure time, DST gaps, and coordinate boundaries.
 """
 import zoneinfo
 from datetime import datetime, timezone
 
 from rest_framework import serializers
-from timezonefinder import TimezoneFinder
-
-from backend.services.data_types import Coord, Notice
-from backend.services.geocoding import (
+from services.data_types import Coord, Notice
+from services.geocoding import (
     DEFAULT_GEOCODING_SERVICE,
     GeocodingError,
     validate_us_coordinates,
 )
+from timezonefinder import TimezoneFinder
 
 tf = TimezoneFinder()
 
@@ -113,7 +112,7 @@ class RouteAnalyzeSerializer(serializers.Serializer):
         dest_coord, dest_name = parse_and_validate_location(dest_raw, "destination")
 
         # Non-identical check (address strings or coordinate proximity < 0.1 miles)
-        from backend.services.heatmap import haversine_distance_miles
+        from services.heatmap import haversine_distance_miles
         dist_between = haversine_distance_miles(origin_coord, dest_coord)
         if dist_between < 0.1:
             raise serializers.ValidationError(

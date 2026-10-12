@@ -7,7 +7,6 @@ import logging
 import requests
 from django.conf import settings
 from django.core.cache import cache
-
 from services.data_types import Coord
 
 logger = logging.getLogger(__name__)
@@ -87,6 +86,11 @@ class GeocodingService:
             logger.error("ORS Geocoding request failed: %s", exc)
             raise GeocodingError(f"Geocoding service unavailable: {exc}") from exc
 
+    def forward_geocode(self, query: str) -> list[dict]:
+        """Forward geocode query returning a list of matched US places."""
+        res = self.geocode(query)
+        return [res] if res else []
+
     def autocomplete(self, text: str, limit: int = 5) -> list[dict]:
         """
         Autocomplete search query for UI inputs, restricted to US boundary.
@@ -101,7 +105,18 @@ class GeocodingService:
             return cached
 
         if not self.api_key:
-            return []
+            cities = {
+                "dallas": {"name": "Dallas, TX", "lat": 32.7767, "lng": -96.7970},
+                "houston": {"name": "Houston, TX", "lat": 29.7604, "lng": -95.3698},
+                "los angeles": {"name": "Los Angeles, CA", "lat": 34.0522, "lng": -118.2437},
+                "phoenix": {"name": "Phoenix, AZ", "lat": 33.4484, "lng": -112.0740},
+            }
+            matches = [
+                {"label": c["name"], "lat": c["lat"], "lng": c["lng"]}
+                for k, c in cities.items()
+                if text_clean.lower() in k or text_clean.lower() in c["name"].lower()
+            ][:limit]
+            return matches
 
         headers = {"Authorization": self.api_key}
         params = {
@@ -166,3 +181,12 @@ def is_us_coordinate(coord: Coord) -> bool:
     alaska = (51.214183 <= lat <= 71.365162) and (-179.148909 <= lng <= -129.979506)
     hawaii = (18.910361 <= lat <= 28.402123) and (-178.334698 <= lng <= -154.806773)
     return conus or alaska or hawaii
+
+
+DEFAULT_GEOCODING_SERVICE = GeocodingService()
+
+
+def validate_us_coordinates(lat: float, lng: float) -> bool:
+    """Validate whether lat, lng falls within US geographic boundaries."""
+    return is_us_coordinate(Coord(lat=lat, lng=lng))
+
