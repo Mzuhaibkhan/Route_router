@@ -1,0 +1,8 @@
+# Commercial Freight Route Optimization Engine
+User-agent: *
+Allow: /
+Allow: /privacy
+Allow: /terms
+Disallow: /api/
+
+Sitemap: https://routeradar.io/sitemap.xml

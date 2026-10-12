@@ -1,0 +1,93 @@
+.warning-banners-root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.banner-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 1.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+}
+
+.banner-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.banner-body {
+  flex: 1;
+}
+
+.banner-type {
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  display: inline-block;
+}
+
+.banner-body h4 {
+  margin-bottom: 0.35rem;
+}
+
+.banner-body p {
+  font-size: 0.9rem;
+  color: var(--color-warm-off-white);
+  opacity: 0.9;
+}
+
+.no-travel-banner {
+  background: rgba(236, 72, 153, 0.12);
+  border-color: #ec4899;
+  color: #ec4899;
+}
+
+.departure-advice-banner {
+  background: rgba(255, 195, 42, 0.08);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.apply-departure-btn {
+  background: var(--color-primary);
+  color: var(--color-surface-black);
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pipeline-warnings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pipeline-warning-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-medium-grey);
+}
+
+.warning-warning {
+  border-color: #f97316;
+  color: #f97316;
+}
+
+.warning-info {
+  border-color: var(--color-medium-grey);
+  color: var(--color-mid-grey);
+}
