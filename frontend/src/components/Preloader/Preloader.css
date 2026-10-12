@@ -1,0 +1,45 @@
+.preloader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-dark-charcoal);
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+  transition: clip-path 0.8s cubic-bezier(0.9, 0, 0.1, 1);
+  pointer-events: none;
+}
+
+.preloader-exit {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%);
+}
+
+.preloader-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0.5rem;
+  background-color: var(--color-primary);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 0.35s cubic-bezier(0.9, 0, 0.1, 1);
+}
+
+.preloader-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.preloader-radar {
+  transition: transform 0.35s cubic-bezier(0.9, 0, 0.1, 1);
+}
+
+.preloader-label {
+  color: var(--color-primary);
+  letter-spacing: 0.15em;
+  font-size: 0.75rem;
+}

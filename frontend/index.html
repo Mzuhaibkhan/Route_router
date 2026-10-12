@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Enforce HTTPS & Strict Security Policies -->
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- SEO Meta Titles & Description -->
+    <title>Route Radar — Fleet Weather Risk Engine & Truck Route Safety Advisor</title>
+    <meta
+      name="description"
+      content="Route Radar is an advanced commercial freight weather risk engine. Predict crosswind rollover tipping hazards, atmospheric storms, and optimal departure windows across 49-hour corridor forecasts."
+    />
+    <meta name="keywords" content="commercial trucking safety, fleet route optimization, weather risk engine, truck rollover prevention, crosswind tipping thresholds, FMCSA weather telemetry" />
+    <meta name="author" content="Route Radar Inc." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://routeradar.io/" />
+    <meta name="theme-color" content="#080808" />
+
+    <!-- Open Graph (Facebook, LinkedIn, Discord) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:site_name" content="Route Radar" />
+    <meta property="og:url" content="https://routeradar.io/" />
+    <meta property="og:title" content="Route Radar — Fleet Weather Risk Engine" />
+    <meta property="og:description" content="Predict crosswind rollover hazards and atmospheric storms for commercial freight with 49-hour corridor scrubbing." />
+    <meta property="og:image" content="https://routeradar.io/og-cover.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Route Radar Commercial Freight Telemetry Dashboard" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@routeradar" />
+    <meta name="twitter:title" content="Route Radar — Fleet Weather Risk Engine" />
+    <meta name="twitter:description" content="Dynamic vehicle stability thresholds, wind tipping advisories, and real-time highway radar." />
+    <meta name="twitter:image" content="https://routeradar.io/og-cover.png" />
+    <meta name="twitter:image:alt" content="Route Radar Radar Dashboard Preview" />
+
+    <!-- Core Web Vitals Resource Hints & Font Display Swap -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Leaflet CSS with Subresource Security -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin="anonymous"
+    />
+
+    <!-- Schema.org JSON-LD Structured Data Markup -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://routeradar.io/#organization",
+          "name": "Route Radar",
+          "url": "https://routeradar.io",
+          "logo": "https://routeradar.io/logo.png",
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+1-800-555-7768",
+            "contactType": "emergency dispatch",
+            "areaServed": "US",
+            "availableLanguage": "en"
+          }
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://routeradar.io/#webapp",
+          "name": "Route Radar Fleet Route Safety Engine",
+          "url": "https://routeradar.io",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "All modern web browsers",
+          "description": "Pre-departure weather telemetry, atmospheric storm forecasting, and load stability models for commercial heavy transport.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "publisher": {
+            "@id": "https://routeradar.io/#organization"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://routeradar.io/#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://routeradar.io/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Privacy Policy",
+              "item": "https://routeradar.io/privacy"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Terms and Conditions",
+              "item": "https://routeradar.io/terms"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
