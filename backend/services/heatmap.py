@@ -22,14 +22,17 @@ def haversine_distance_miles(c1: Coord, c2: Coord) -> float:
 
 
 def min_distance_to_polyline_miles(point: Coord, polyline: list[Coord]) -> float:
-    """Computes minimum distance from a point to any segment in a polyline with fast bounding box rejection."""
+    """
+    Computes minimum distance from a point to any segment in a polyline with
+    fast bounding box rejection.
+    """
     if not polyline:
         return float("inf")
     if len(polyline) == 1:
         return haversine_distance_miles(point, polyline[0])
 
     # 1 degree lat is ~69 miles; 1 degree lng in US (lat ~35-40) is ~53 miles
-    # For a distance check of <= 20 miles, points with lat diff > 0.35° or lng diff > 0.50° can be safely skipped
+    # For a check <= 20 mi, points with lat diff > 0.35° or lng diff > 0.50° are skipped
     lat_thresh = 0.35
     lng_thresh = 0.50
 
@@ -70,7 +73,7 @@ def generate_corridor_grid(
     if not all_points:
         return []
 
-    # Subsample dense route geometries to at most ~200 points per route for fast corridor proximity checks
+    # Subsample dense route geometries to at most ~200 points per route for fast checks
     subsampled_geometries: list[list[Coord]] = [
         route[::max(1, len(route) // 200)] for route in route_geometries if route
     ]
