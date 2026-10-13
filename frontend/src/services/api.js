@@ -4,7 +4,7 @@ import laPhoenixFixture from "../fixtures/la_phoenix.json";
 
 const apiClient = axios.create({
   baseURL: "/",
-  timeout: 15000,
+  timeout: 45000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -50,15 +50,21 @@ export async function analyzeRoutes({
     const res = await apiClient.post(`/api/routes/analyze`, payload);
     return res.data;
   } catch (err) {
-    console.warn("API request failed or backend offline. Serving demo fixture fallback.", err);
-    // Return appropriate fixture matching origin/destination
-    if (
-      (origin && origin.toLowerCase().includes("phoenix")) ||
-      (destination && destination.toLowerCase().includes("phoenix"))
-    ) {
-      return laPhoenixFixture;
-    }
-    return dallasHoustonFixture;
+    const serverError =
+      err.response?.data?.error ||
+      (typeof err.response?.data?.origin === "string" ? `Origin error: ${err.response.data.origin}` : null) ||
+      (Array.isArray(err.response?.data?.origin) ? `Origin error: ${err.response.data.origin[0]}` : null) ||
+      (typeof err.response?.data?.destination === "string" ? `Destination error: ${err.response.data.destination}` : null) ||
+      (Array.isArray(err.response?.data?.destination) ? `Destination error: ${err.response.data.destination[0]}` : null) ||
+      (typeof err.response?.data?.load_weight_lbs === "string" ? `Weight error: ${err.response.data.load_weight_lbs}` : null) ||
+      (Array.isArray(err.response?.data?.non_field_errors) ? err.response.data.non_field_errors[0] : null) ||
+      (typeof err.response?.data === "string" ? err.response.data : null) ||
+      (err.code === "ECONNABORTED" ? "Route analysis timed out. Long-distance routing or external APIs took longer than 45s." : null) ||
+      (err.message === "Network Error" ? "Network Error: Could not connect to backend on port 8000. Please ensure the backend is running." : null) ||
+      err.message;
+
+    console.error("API analysis failed:", serverError, err);
+    throw new Error(serverError || "Failed to analyze routes.");
   }
 }
 

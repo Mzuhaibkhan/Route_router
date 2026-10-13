@@ -22,20 +22,27 @@ def haversine_distance_miles(c1: Coord, c2: Coord) -> float:
 
 
 def min_distance_to_polyline_miles(point: Coord, polyline: list[Coord]) -> float:
-    """Computes minimum distance from a point to any segment in a polyline."""
+    """Computes minimum distance from a point to any segment in a polyline with fast bounding box rejection."""
     if not polyline:
         return float("inf")
     if len(polyline) == 1:
         return haversine_distance_miles(point, polyline[0])
 
+    # 1 degree lat is ~69 miles; 1 degree lng in US (lat ~35-40) is ~53 miles
+    # For a distance check of <= 20 miles, points with lat diff > 0.35° or lng diff > 0.50° can be safely skipped
+    lat_thresh = 0.35
+    lng_thresh = 0.50
+
     min_dist = float("inf")
     # Quick distance check against polyline vertices
     for p in polyline:
+        if abs(point.lat - p.lat) > lat_thresh or abs(point.lng - p.lng) > lng_thresh:
+            continue
         d = haversine_distance_miles(point, p)
         if d < min_dist:
             min_dist = d
-            if min_dist == 0.0:
-                return 0.0
+            if min_dist <= 5.0:  # If within 5 miles, already definitely inside the 20-mile corridor
+                return min_dist
 
     return min_dist
 
@@ -62,6 +69,11 @@ def generate_corridor_grid(
     all_points: list[Coord] = [pt for route in route_geometries for pt in route if pt]
     if not all_points:
         return []
+
+    # Subsample dense route geometries to at most ~200 points per route for fast corridor proximity checks
+    subsampled_geometries: list[list[Coord]] = [
+        route[::max(1, len(route) // 200)] for route in route_geometries if route
+    ]
 
     # Calculate bounding box with buffer
     min_lat = min(pt.lat for pt in all_points)
@@ -90,7 +102,7 @@ def generate_corridor_grid(
 
                 # Check if within corridor_width_miles of ANY route
                 is_near = False
-                for route in route_geometries:
+                for route in subsampled_geometries:
                     if min_distance_to_polyline_miles(cand, route) <= corridor_width_miles:
                         is_near = True
                         break
