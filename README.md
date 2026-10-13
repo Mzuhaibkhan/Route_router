@@ -243,30 +243,6 @@ Returns geocoded address candidates restricted to the United States.
 
 ---
 
-## 7. Loom Walkthrough Script (5–10 Minutes)
-
-1. **0:00–1:00 — Introduction & Architecture:**
-   - Problem statement: truck rollover prevention and severe weather routing.
-   - Single-service architecture (React 19 + WhiteNoise + Django REST Framework).
-2. **1:00–3:00 — Happy Path Demo (Dallas &rarr; Houston):**
-   - Enter route parameters, adjust trailer weight (e.g. 35,000 lbs).
-   - Review 3 route candidate cards, 5-mile bucketed sorting, and `★ RECOMMENDED` badge.
-3. **3:00–4:30 — Via-Waypoint Routing & Distance Tiers:**
-   - Explain ORS 100/150 km polygon limitations and how Route Radar's distance tiers maintain 3 robust candidates.
-4. **4:30–6:00 — Strict Boundary Physics & Overrides:**
-   - Demonstrate the Interactive Physics Sandbox.
-   - Show tipping threshold overrides (Over-30k lb in 45–54 mph wind triggering No Travel).
-5. **6:00–7:30 — Client-Side 49-Hour Forecast Slider:**
-   - Scrub slider across 0–48 hours; highlight zero network requests during scrubbing.
-   - Show animated truck marker tracking progress along the corridor.
-6. **7:30–8:30 — Best Departure Window & Resilience:**
-   - Demonstrate earliest safe departure advice.
-   - Show offline "Try Demo" fallback.
-7. **8:30–10:00 — Quality Assurance & Codebase Walkthrough:**
-   - Highlight 139 passing automated tests (122 pytest + 17 vitest).
-   - Summarize deployment configuration on Render.
-
----
 
 ## 8. Test Suite & Verification
 
