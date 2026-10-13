@@ -117,7 +117,7 @@ class TestInputValidation:
         assert "forecast_horizon" in codes
 
     def test_iv_11_interval_fallback_to_25mi(self):
-        """IV_11: Invalid checkpoint interval falls back to 25 mi."""
+        """IV_11: Invalid checkpoint interval falls back to 25 mi, valid intervals accepted."""
         serializer = RouteAnalyzeSerializer(data={
             "origin": {"lat": 32.7767, "lng": -96.7970},
             "destination": {"lat": 29.7604, "lng": -95.3698},
@@ -125,6 +125,15 @@ class TestInputValidation:
         })
         assert serializer.is_valid()
         assert serializer.validated_data["checkpoint_interval_miles"] == 25
+
+        for valid_interval in (10, 25, 50, 75, 100):
+            s = RouteAnalyzeSerializer(data={
+                "origin": {"lat": 32.7767, "lng": -96.7970},
+                "destination": {"lat": 29.7604, "lng": -95.3698},
+                "interval_miles": valid_interval,
+            })
+            assert s.is_valid()
+            assert s.validated_data["checkpoint_interval_miles"] == valid_interval
 
     def test_iv_12_non_us_coordinates_rejected(self):
         """IV_12: Non-US coordinates (e.g. London, UK) rejected."""

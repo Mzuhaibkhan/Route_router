@@ -38,12 +38,15 @@ export async function analyzeRoutes({
   departure_utc = Math.floor(Date.now() / 1000),
   interval_miles = null,
 }) {
+  const numInterval =
+    interval_miles === "auto" || interval_miles == null ? null : Number(interval_miles);
   const payload = {
     origin,
     destination,
     load_weight_lbs: Number(load_weight_lbs),
     departure_utc: Number(departure_utc),
-    interval_miles: interval_miles === "auto" ? null : Number(interval_miles),
+    checkpoint_interval_miles: numInterval,
+    interval_miles: numInterval,
   };
 
   try {

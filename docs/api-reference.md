@@ -41,7 +41,7 @@ The primary pipeline endpoint. Geocodes origin and destination, requests multi-r
 | `load_weight_lbs` | `integer` | No | Gross vehicle weight in pounds. Range: `1000` to `80000` (Default: `40000`). |
 | `departure_time` | `string` | No | ISO 8601 string (e.g. `2026-10-15T08:00:00`). |
 | `departure_utc` | `integer` | No | Unix timestamp in seconds. Snapped forward if inside a DST transition gap. |
-| `checkpoint_interval_miles` | `integer` | No | Sampling resolution: `10`, `25`, or `50` miles (Default: `25`). |
+| `checkpoint_interval_miles` | `integer` | No | Sampling resolution: `10`, `25`, `50`, `75`, or `100` miles (Default: `25`). |
 
 #### Response Schema (`200 OK`)
 ```json
