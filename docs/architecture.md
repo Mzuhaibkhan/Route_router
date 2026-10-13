@@ -8,7 +8,7 @@ Route Radar is built as a unified, high-performance web platform that consolidat
 graph TB
   subgraph Client ["Client Browser / Dispatcher Terminal"]
     UI[React 19 SPA: Brutalist Dark Interface]
-    CanvasMap[Leaflet Canvas: High-Density Checkpoints & Polylines]
+    InteractiveMap[React-Leaflet: Concurrent Polylines, Hover Highlights & Popups]
     FleetRadar[Fleet Command Center: 3D WebGL Constellation & US Radar]
     LenisScroll[Lenis Smooth Scroll & GSAP ScrollTrigger Engine]
   end
@@ -67,7 +67,7 @@ graph TB
 
 ### 2.1 Frontend Client Layer
 - **Framework**: React 19, Vite 6, modern ES modules.
-- **Mapping Engine**: Leaflet with HTML5 Canvas renderer to ensure 60fps rendering even when visualizing hundreds of coordinate checkpoints simultaneously.
+- **Mapping Engine**: React-Leaflet with OpenStreetMap base tiles styled with a dark tactical filter. Renders all alternative routes concurrently with interactive hover highlighting, click selection, detailed coordinate popups (exact lat/long, weather, risk factors), side zoom controls, and quick route/USA auto-centering.
 - **Kinetic Engine**:
   - **Lenis Smooth Scroll**: Decoupled inertial vertical scrolling synchronized with GSAP ScrollTrigger. Automatically halts scroll capture when modal drawers or menus open.
   - **Three.js WebGL Constellation**: Interactive 3D particle constellation canvas with cursor raycasting spotlight and dynamic network links in the footer.
@@ -86,11 +86,11 @@ The core business logic is encapsulated in pure, stateless Python service module
 | `geocoding.py` | US bounding-box validation, forward geocoding with caching, coordinate normalization. |
 | `routing.py` | Primary and alternative route generation using ORS HGV profiles, bounding-box detour filters, and avoidance polygons. |
 | `checkpoints.py` | Uniform corridor sampling at 10, 25, or 50 miles; calculates cumulative distance, driving duration, and point-in-time ETAs. |
-| `weather.py` | Multi-coordinate batch fetching from Open-Meteo, UTC-hour matching, and wind interpolation. |
+| `weather.py` | Multi-coordinate batch fetching from Open-Meteo in 100-location chunks, UTC-hour matching, and wind interpolation. |
 | `risk_engine.py` | Mathematical classification of sustained wind, rain, and snow against strict boundaries, modified by load weight and trailer aerodynamic drag. |
 | `recommendation.py` | Penalty-weighted route ranking comparing duration, mileage, and elevated risk exposure. |
-| `departure.py` | Temporal sweeping across a ?6-hour departure horizon to recommend optimal departure timing. |
-| `heatmap.py` | 0.25? grid spatial bounding box synthesis for corridor risk heat visualization. |
+| `departure.py` | Temporal sweeping across a ±6-hour departure horizon to recommend optimal departure timing. |
+| `heatmap.py` | Fast spatial bounding box corridor synthesis (<0.35° lat / <0.50° lng pre-filter) cutting computation time from 87s to <7s. |
 | `cache_utils.py` | Cache stampede prevention via double-check locking mutex and normalized coordinate key hashing. |
 
 ---

@@ -89,8 +89,25 @@ graph TD
 
 ---
 
-## 5. Mapbox & Leaflet Canvas Optimization
+## 5. React-Leaflet Concurrent Mapping Engine
 
-When visualizing routes with hundreds of checkpoints, SVG-based DOM nodes introduce significant frame lag. Route Radar enforces Leaflet?s HTML5 Canvas renderer (`preferCanvas: true`):
-- All polyline paths and color-coded hazard segments are drawn directly onto an HTML5 canvas element.
-- Reduces DOM node count from over 1,500 elements down to a single canvas element, maintaining a consistent 60fps render rate during zoom and pan operations.
+Route Radar utilizes an interactive React-Leaflet mapping engine designed for dispatcher ergonomics and high-density geospatial information display:
+
+### 5.1 Cartographic Base & Nationwide Projection
+- **Base Tile Layer**: Styled with a dark cartographic CSS filter over standard OpenStreetMap tiles (`{s}.tile.openstreetmap.org`), maintaining an industrial dark mode aesthetic with 100% free availability and zero API key requirements.
+- **Continental US Bounds**: Constrained to CONUS bounds (`[24.5, -125.0]` to `[49.5, -66.5]`) with fluid drag-panning and trackpad scroll-wheel zoom disabled to preserve page scrolling.
+
+### 5.2 Concurrent Multi-Route Rendering & Hover Focus
+- **Simultaneous Corridors**: Renders all candidate routes (Primary + Alternatives) concurrently on the map canvas.
+- **Dynamic Hover Focus**: Hovering over any route polyline highlights the route in vivid yellow/white with increased weight and presents a floating tooltip with route name, mileage, travel time, and click-to-activate action.
+- **Segmented Hazard Polylines**: The active route renders underlying weather risk segments (Green: Low, Yellow: Moderate, Orange: High, Red: Severe, Purple: No Travel).
+
+### 5.3 Checkpoint Telemetry Popups
+- **Interactive Circle Markers**: Checkpoint nodes rendered along the corridor can be clicked to open a modal popup.
+- **Exact Coordinates Display**: Displays precise **Latitude** (e.g. `32.7767° N`) and **Longitude** (e.g. `-96.7970° W`).
+- **Atmospheric Audit**: Displays sustained wind speed, peak gusts, hourly precipitation, and temperature.
+- **Risk Classification & Factors**: Displays the final adjusted risk tier alongside specific contributing factor notices.
+
+### 5.4 Ergonomic Navigation Controls
+- **Side Zoom Controls**: `+` and `–` buttons positioned on the top-right corner.
+- **Quick-Snap Controls**: Dedicated `[ROUTE]` button to automatically re-fit the active corridor with padding, and `[USA]` button to zoom out to the nationwide overview.

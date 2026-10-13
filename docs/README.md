@@ -13,8 +13,9 @@ Welcome to the comprehensive technical documentation for **Route Radar**, an ent
 | [Risk Engine Specification](risk-engine.md) | Deep dive into meteorological risk bands, truck gross weight tipping thresholds, trailer aerodynamic sail factors, and departure window optimization. |
 | [Multi-Fleet Management Guide](fleet-management.md) | Guide to organizational tenant hierarchy, vehicle & trailer fleet inventory, high-throughput batch route analysis, and live GPS hazard monitoring. |
 | [Production Deployment Guide](deployment.md) | Instructions for deploying to Render via Blueprint/Docker, local container orchestration, WhiteNoise single-origin static serving, and environment configuration. |
-| [Frontend Architecture & UI](frontend.md) | Overview of the React 19 SPA, brutalist dark design system, Lenis smooth scrolling engine, Three.js WebGL particle constellation, and GSAP kinetic animations. |
-| [Testing & Quality Assurance](testing.md) | Testing philosophy, test suite coverage (128 Pytest tests, 17 Vitest tests), floating-point boundary tests, and GitHub Actions CI pipeline. |
+| [Frontend Architecture & UI](frontend.md) | Overview of the React 19 SPA, brutalist dark design system, React-Leaflet concurrent mapping, Lenis smooth scrolling, Three.js WebGL particle constellation, and GSAP kinetic animations. |
+| [Testing & Quality Assurance](testing.md) | Testing philosophy, test suite coverage (122 Pytest tests, 17 Vitest tests, 100% passing), floating-point boundary tests, and GitHub Actions CI pipeline. |
+| [Loom Video Presentation Guide](loom_speech.md) | Complete 5-to-6 minute technical demonstration script, timestamps, visual cues, and presenter guide. |
 
 ---
 

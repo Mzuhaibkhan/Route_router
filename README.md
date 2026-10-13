@@ -18,9 +18,9 @@ Route Radar is built as a unified, high-performance single-service deployment wh
 
 ```mermaid
 graph TB
-  subgraph Frontend ["Frontend — React 19 + Vite 6 + Leaflet Canvas"]
+  subgraph Frontend ["Frontend — React 19 + Vite 6 + React-Leaflet"]
     Form[RouteForm: origin, dest, weight, departure]
-    Map[MapView: Canvas Polylines, Risk Segments, Checkpoints, Truck]
+    Map[MapView: Concurrent Polylines, Hover Highlight, Checkpoint Popups, Side Zoom]
     Cards[RouteCards: 5-Mile Bucketed Candidate Comparison]
     Slider[ForecastSlider: 0-48h Client-Side Scrubbing]
     Legal[Legal & 404 Routing Pages]
