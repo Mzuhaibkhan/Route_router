@@ -21,6 +21,7 @@ export default function Menu({ isOpen, onClose, onSelectPreset, onNavigate }) {
   return (
     <div
       className={`menu-overlay ${isOpen ? "menu-open" : ""}`}
+      data-lenis-prevent
       aria-hidden={!isOpen}
     >
       <div className="container menu-body">

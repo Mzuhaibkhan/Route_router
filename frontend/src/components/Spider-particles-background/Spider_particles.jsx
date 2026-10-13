@@ -1,0 +1,703 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+import * as THREE from "three";
+const DEFAULT_ROOT_MARGIN = "256px";
+function resolveElement(root) {
+    if (!root)
+        return null;
+    if (typeof root === "function")
+        return root() ?? null;
+    if (typeof root === "object" && "current" in root)
+        return root.current ?? null;
+    return root;
+}
+function createVisibilityGate({ root = null, rootMargin = DEFAULT_ROOT_MARGIN, threshold = 0, observeTab = true, observeOffscreen = true, onChange, } = {}) {
+    let tabVisible = typeof document === "undefined" ? true : !document.hidden;
+    // Match border-beam: assume onscreen until the observer reports otherwise.
+    let onscreen = true;
+    let destroyed = false;
+    let observer = null;
+    const isActive = () => {
+        if (destroyed)
+            return false;
+        if (observeTab && !tabVisible)
+            return false;
+        if (observeOffscreen && resolveElement(root) && !onscreen)
+            return false;
+        return true;
+    };
+    let lastActive = isActive();
+    const emit = () => {
+        if (destroyed)
+            return;
+        const next = isActive();
+        if (next === lastActive)
+            return;
+        lastActive = next;
+        onChange?.(next);
+    };
+    const onVisibilityChange = () => {
+        tabVisible = !document.hidden;
+        emit();
+    };
+    if (observeTab && typeof document !== "undefined") {
+        document.addEventListener("visibilitychange", onVisibilityChange);
+    }
+    const bindObserver = () => {
+        if (!observeOffscreen || typeof IntersectionObserver === "undefined") {
+            return;
+        }
+        const el = resolveElement(root);
+        if (!el)
+            return;
+        observer = new IntersectionObserver((entries) => {
+            for (const entry of entries) {
+                onscreen = entry.isIntersecting;
+            }
+            emit();
+        }, { rootMargin, threshold });
+        observer.observe(el);
+    };
+    bindObserver();
+    return {
+        /** Whether the animation should currently run. */
+        get isActive() {
+            return isActive();
+        },
+        /**
+         * Re-bind IntersectionObserver after the root element mounts late
+         * (e.g. ref not ready on first call). Safe to call multiple times.
+         */
+        observe(nextRoot) {
+            if (destroyed)
+                return;
+            if (nextRoot != null)
+                root = nextRoot;
+            if (observer) {
+                observer.disconnect();
+                observer = null;
+            }
+            onscreen = true;
+            bindObserver();
+            emit();
+        },
+        destroy() {
+            if (destroyed)
+                return;
+            destroyed = true;
+            if (observeTab && typeof document !== "undefined") {
+                document.removeEventListener("visibilitychange", onVisibilityChange);
+            }
+            if (observer) {
+                observer.disconnect();
+                observer = null;
+            }
+        },
+    };
+}
+/**
+ * Owns a requestAnimationFrame loop that auto-pauses when the tab is hidden
+ * or the root element is offscreen.
+ */
+function createSuspendedRaf({ onFrame, root = null, rootMargin = DEFAULT_ROOT_MARGIN, threshold = 0, observeTab = true, observeOffscreen = true, }) {
+    if (typeof onFrame !== "function") {
+        throw new TypeError("createSuspendedRaf: onFrame is required");
+    }
+    let rafId = null;
+    let running = false;
+    let destroyed = false;
+    const stopRaf = () => {
+        if (rafId != null) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+        }
+    };
+    const tick = (time) => {
+        rafId = null;
+        if (destroyed || !running || !gate.isActive)
+            return;
+        onFrame(time);
+        if (!destroyed && running && gate.isActive) {
+            rafId = requestAnimationFrame(tick);
+        }
+    };
+    const sync = () => {
+        if (destroyed)
+            return;
+        if (running && gate.isActive) {
+            if (rafId == null) {
+                rafId = requestAnimationFrame(tick);
+            }
+        }
+        else {
+            stopRaf();
+        }
+    };
+    const gate = createVisibilityGate({
+        root,
+        rootMargin,
+        threshold,
+        observeTab,
+        observeOffscreen,
+        onChange: sync,
+    });
+    return {
+        /** Start (or resume) the loop when visibility allows. */
+        start() {
+            if (destroyed)
+                return;
+            running = true;
+            sync();
+        },
+        /** Stop requesting frames (visibility listeners stay attached until destroy). */
+        stop() {
+            running = false;
+            stopRaf();
+        },
+        /** Whether the caller has started the loop (may still be paused by visibility). */
+        get isRunning() {
+            return running;
+        },
+        /** Whether a frame is currently allowed to schedule. */
+        get isActive() {
+            return gate.isActive;
+        },
+        /** Re-attach offscreen observer to a (new) root element. */
+        observe(nextRoot) {
+            gate.observe(nextRoot);
+            sync();
+        },
+        /** Tear down listeners and cancel any pending frame. */
+        destroy() {
+            if (destroyed)
+                return;
+            destroyed = true;
+            running = false;
+            stopRaf();
+            gate.destroy();
+        },
+    };
+}
+export { createSuspendedRaf, createVisibilityGate, DEFAULT_ROOT_MARGIN, };
+//  Constants
+const MOUSE_OFFSCREEN = -9999;
+const MOUSE_THRESHOLD = -9000; // anything above this = mouse is on screen
+const LERP_SPEED = 0.1;
+const FADE_SPEED = 0.04;
+const REDUCED_MOTION_FACTOR = 0.6;
+// GLSL Shaders
+const PARTICLE_VERT = /* glsl */ `
+  uniform float uSize;
+  uniform vec2  uMouse;
+  uniform float uSpotlightRadius;
+  uniform float uBaseScale;
+  varying float vScale;
+
+  void main() {
+    vec4  mvPos = modelViewMatrix * vec4(position, 1.0);
+    float dist  = distance(position.xy, uMouse);
+    float spotScale = dist < uSpotlightRadius
+      ? 1.0 - (dist / uSpotlightRadius)
+      : 0.0;
+    float scale = max(uBaseScale, spotScale);
+
+    vScale = scale;
+    gl_PointSize = uSize * scale;
+    gl_Position  = projectionMatrix * mvPos;
+  }
+`;
+const CURSOR_VERT = /* glsl */ `
+  uniform float uSize;
+  varying float vScale;
+
+  void main() {
+    vScale = 1.0;
+    vec4 mvPos   = modelViewMatrix * vec4(position, 1.0);
+    gl_PointSize = uSize;
+    gl_Position  = projectionMatrix * mvPos;
+  }
+`;
+// Shared by both particle dots and the cursor dot
+const POINT_FRAG = /* glsl */ `
+  uniform vec3  uColor;
+  uniform vec3  uGlow;
+  uniform bool  uGlowEnabled;
+  uniform float uAlpha;
+  uniform float uBaseAlpha;
+  varying float vScale;
+
+  void main() {
+    if (vScale <= 0.001) discard;
+
+    vec2  uv = gl_PointCoord - 0.5;
+    float d  = length(uv);
+    if (d > 0.5) discard;
+
+    float effectiveAlpha = max(uBaseAlpha, uAlpha * vScale);
+
+    if (uGlowEnabled) {
+      float core  = smoothstep(0.5, 0.0, d);
+      float glow  = smoothstep(0.5, 0.1, d) * 0.6;
+      vec3  col   = mix(uGlow, uColor, core);
+      float alpha = (core + glow) * effectiveAlpha;
+      gl_FragColor = vec4(col, alpha);
+    } else {
+      float alpha = smoothstep(0.5, 0.45, d) * effectiveAlpha;
+      gl_FragColor = vec4(uColor, alpha);
+    }
+  }
+`;
+// Component
+export default function SpiderParticles({
+    particleCount = 180,
+    gridGap = 0,
+    particleSize = 20.0,
+    mouseConnectDist = 160,
+    spotlightRadius = 300,
+    showWeb = true,
+    particlesGlow = false,
+    glowColor = 0xffffff,
+    particleColor = 0xffffff,
+    webColor = 0xffffff,
+    centerColor = 0xffffff,
+    baseAlpha = 0.0,
+    baseScale = 0.0,
+    className = "",
+    style = {},
+    showUI = true,
+}) {
+    const mountRef = useRef(null);
+    const [active, setActive] = useState(false);
+    const [pos, setPos] = useState({ x: 0, y: 0 });
+    useEffect(() => {
+        const mount = mountRef.current;
+        if (!mount)
+            return;
+        let width = mount.clientWidth || mount.offsetWidth || window.innerWidth;
+        let height = mount.clientHeight || mount.offsetHeight || 320;
+        const _glowColor = new THREE.Color(glowColor);
+        const _particleColor = new THREE.Color(particleColor);
+        const _webColor = new THREE.Color(webColor);
+        const _centerColor = new THREE.Color(centerColor);
+        let renderer;
+        try {
+            if (typeof window === "undefined" || !window.WebGLRenderingContext) return;
+            const testCanvas = document.createElement("canvas");
+            const testGl = testCanvas.getContext?.("webgl") || testCanvas.getContext?.("experimental-webgl");
+            if (!testGl) return;
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        } catch (e) {
+            // Graceful fallback for environments without WebGL context (e.g. jsdom / test suites)
+            return;
+        }
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setSize(width, height);
+        renderer.setClearColor(0x000000, 0);
+        mount.appendChild(renderer.domElement);
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, -500, 500);
+        camera.position.z = 1;
+
+        // Mouse State
+        const mouse = new THREE.Vector2(MOUSE_OFFSCREEN, MOUSE_OFFSCREEN);
+        const smoothMouse = new THREE.Vector2(MOUSE_OFFSCREEN, MOUSE_OFFSCREEN);
+        let mouseEntryAlpha = 0;
+        let mousePresent = false;
+        let mouseJustEntered = false;
+
+        const onMove = (e) => {
+            const rect = mount.getBoundingClientRect();
+            if (
+                e.clientX >= rect.left &&
+                e.clientX <= rect.right &&
+                e.clientY >= rect.top &&
+                e.clientY <= rect.bottom
+            ) {
+                mouse.set(e.clientX - rect.left - width / 2, -(e.clientY - rect.top - height / 2));
+                setPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                if (!mousePresent) {
+                    mouseJustEntered = true;
+                    mousePresent = true;
+                    setActive(true);
+                }
+            } else if (mousePresent) {
+                mousePresent = false;
+                setActive(false);
+            }
+        };
+
+        const onLeave = () => {
+            mousePresent = false;
+            mouseJustEntered = false;
+            setActive(false);
+        };
+
+        const onTouch = (e) => {
+            const t = e.touches && e.touches[0];
+            if (!t) return;
+            const rect = mount.getBoundingClientRect();
+            if (
+                t.clientX >= rect.left &&
+                t.clientX <= rect.right &&
+                t.clientY >= rect.top &&
+                t.clientY <= rect.bottom
+            ) {
+                mouse.set(t.clientX - rect.left - width / 2, -(t.clientY - rect.top - height / 2));
+                setPos({ x: t.clientX - rect.left, y: t.clientY - rect.top });
+                if (!mousePresent) mouseJustEntered = true;
+                mousePresent = true;
+                setActive(true);
+            }
+        };
+
+        const onTouchEnd = () => {
+            mousePresent = false;
+            mouseJustEntered = false;
+            setActive(false);
+        };
+
+        window.addEventListener("pointermove", onMove);
+        window.addEventListener("pointerleave", onLeave);
+        window.addEventListener("blur", onLeave);
+        document.addEventListener("mouseleave", onLeave);
+        window.addEventListener("touchmove", onTouch, { passive: true });
+        window.addEventListener("touchend", onTouchEnd);
+
+        // Grid Layout & Positions
+        let cols, rows, actualCount, spacingX, spacingY;
+        if (gridGap > 0) {
+            cols = Math.max(1, Math.floor(width / gridGap));
+            rows = Math.max(1, Math.floor(height / gridGap));
+            actualCount = cols * rows;
+            spacingX = spacingY = gridGap;
+        } else {
+            actualCount = particleCount;
+            const aspect = Math.max(0.1, width / height);
+            rows = Math.max(1, Math.round(Math.sqrt(actualCount / aspect)));
+            cols = Math.ceil(actualCount / rows);
+            spacingX = width / cols;
+            spacingY = height / rows;
+        }
+
+        const basePositions = new Float32Array(actualCount * 2);
+        const positions = new Float32Array(actualCount * 3);
+        for (let i = 0; i < actualCount; i++) {
+            const c = i % cols;
+            const r = Math.floor(i / cols);
+            const jitterX = Math.sin(i * 12.9898) * 0.22 * spacingX;
+            const jitterY = Math.cos(i * 78.233) * 0.22 * spacingY;
+            basePositions[i * 2] = (c + 0.5) * spacingX - width / 2 + jitterX;
+            basePositions[i * 2 + 1] = (r + 0.5) * spacingY - height / 2 + jitterY;
+            positions[i * 3] = basePositions[i * 2];
+            positions[i * 3 + 1] = basePositions[i * 2 + 1];
+            positions[i * 3 + 2] = 0;
+        }
+
+        // Particle Points
+        const particleGeo = new THREE.BufferGeometry();
+        particleGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+        const particleMat = new THREE.ShaderMaterial({
+            uniforms: {
+                uColor: { value: _particleColor },
+                uGlow: { value: _glowColor },
+                uSize: { value: particleSize * Math.min(window.devicePixelRatio || 1, 2) },
+                uMouse: { value: new THREE.Vector2(MOUSE_OFFSCREEN, MOUSE_OFFSCREEN) },
+                uSpotlightRadius: { value: spotlightRadius },
+                uGlowEnabled: { value: particlesGlow },
+                uAlpha: { value: 0.0 },
+                uBaseAlpha: { value: baseAlpha },
+                uBaseScale: { value: baseScale },
+            },
+            vertexShader: PARTICLE_VERT,
+            fragmentShader: POINT_FRAG,
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+        });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        // Cursor Dot
+        const cursorGeo = new THREE.BufferGeometry();
+        cursorGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array([0, 0, 0]), 3));
+        const cursorMat = new THREE.ShaderMaterial({
+            uniforms: {
+                uColor: { value: _centerColor },
+                uGlow: { value: _glowColor },
+                uSize: { value: particleSize * Math.min(window.devicePixelRatio || 1, 2) },
+                uGlowEnabled: { value: particlesGlow },
+                uAlpha: { value: 0.0 },
+            },
+            vertexShader: CURSOR_VERT,
+            fragmentShader: POINT_FRAG,
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+        });
+        const cursorPoint = new THREE.Points(cursorGeo, cursorMat);
+        scene.add(cursorPoint);
+
+        // Web Lines
+        const mouseLinePositions = new Float32Array(actualCount * 6);
+        const mouseLineColors = new Float32Array(actualCount * 6);
+        const mouseLineGeo = new THREE.BufferGeometry();
+        mouseLineGeo.setAttribute("position", new THREE.BufferAttribute(mouseLinePositions, 3));
+        mouseLineGeo.setAttribute("color", new THREE.BufferAttribute(mouseLineColors, 3));
+        const mouseLineMat = new THREE.LineBasicMaterial({
+            vertexColors: true,
+            transparent: true,
+            opacity: 1,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+        });
+        const mouseLines = new THREE.LineSegments(mouseLineGeo, mouseLineMat);
+        scene.add(mouseLines);
+
+        // Resize Handling
+        const handleResize = () => {
+            if (!mount) return;
+            const newW = mount.clientWidth || mount.offsetWidth || window.innerWidth;
+            const newH = mount.clientHeight || mount.offsetHeight || 320;
+            if (newW <= 0 || newH <= 0) return;
+            width = newW;
+            height = newH;
+            renderer.setSize(width, height);
+            camera.left = -width / 2;
+            camera.right = width / 2;
+            camera.top = height / 2;
+            camera.bottom = -height / 2;
+            camera.updateProjectionMatrix();
+
+            const aspect = Math.max(0.1, width / height);
+            rows = Math.max(1, Math.round(Math.sqrt(actualCount / aspect)));
+            cols = Math.ceil(actualCount / rows);
+            spacingX = width / cols;
+            spacingY = height / rows;
+            for (let i = 0; i < actualCount; i++) {
+                const c = i % cols;
+                const r = Math.floor(i / cols);
+                const jitterX = Math.sin(i * 12.9898) * 0.22 * spacingX;
+                const jitterY = Math.cos(i * 78.233) * 0.22 * spacingY;
+                basePositions[i * 2] = (c + 0.5) * spacingX - width / 2 + jitterX;
+                basePositions[i * 2 + 1] = (r + 0.5) * spacingY - height / 2 + jitterY;
+            }
+        };
+
+        let resizeObserver;
+        if (typeof ResizeObserver !== "undefined") {
+            resizeObserver = new ResizeObserver(() => handleResize());
+            resizeObserver.observe(mount);
+        }
+        window.addEventListener("resize", handleResize);
+
+        let reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+        const reduceMotionMq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+        const onReduceMotionChange = (event) => {
+            reduceMotion = event.matches;
+        };
+        reduceMotionMq?.addEventListener?.("change", onReduceMotionChange);
+
+        // Animation Loop
+        const loop = createSuspendedRaf({
+            root: mount,
+            onFrame: (time) => {
+                const lerpSpeed = reduceMotion ? LERP_SPEED * REDUCED_MOTION_FACTOR : LERP_SPEED;
+                const fadeSpeed = reduceMotion ? FADE_SPEED * REDUCED_MOTION_FACTOR : FADE_SPEED;
+                const spotlightR = reduceMotion ? spotlightRadius * REDUCED_MOTION_FACTOR : spotlightRadius;
+                const connectDist = reduceMotion ? mouseConnectDist * REDUCED_MOTION_FACTOR : mouseConnectDist;
+                const t = (time || performance.now()) * 0.001;
+
+                // Subtle ambient particle floating drift
+                if (!reduceMotion) {
+                    for (let i = 0; i < actualCount; i++) {
+                        const driftX = Math.sin(t * 0.6 + i * 1.5) * 3.5;
+                        const driftY = Math.cos(t * 0.5 + i * 1.7) * 3.5;
+                        positions[i * 3] = basePositions[i * 2] + driftX;
+                        positions[i * 3 + 1] = basePositions[i * 2 + 1] + driftY;
+                    }
+                    particleGeo.attributes.position.needsUpdate = true;
+                }
+
+                // Fade the entire effect in/out as cursor enters or leaves
+                mouseEntryAlpha = mousePresent
+                    ? Math.min(1, mouseEntryAlpha + fadeSpeed)
+                    : Math.max(0, mouseEntryAlpha - fadeSpeed);
+
+                // Snap smoothMouse on the first frame, lerp every frame after
+                if (mousePresent && mouse.x > MOUSE_THRESHOLD) {
+                    if (mouseJustEntered) {
+                        smoothMouse.copy(mouse);
+                        mouseJustEntered = false;
+                    } else {
+                        smoothMouse.x += (mouse.x - smoothMouse.x) * lerpSpeed;
+                        smoothMouse.y += (mouse.y - smoothMouse.y) * lerpSpeed;
+                    }
+                } else if (!mousePresent && mouseEntryAlpha <= 0) {
+                    smoothMouse.set(MOUSE_OFFSCREEN, MOUSE_OFFSCREEN);
+                }
+
+                // Sync uniforms
+                particleMat.uniforms.uMouse.value.copy(smoothMouse);
+                particleMat.uniforms.uAlpha.value = mouseEntryAlpha;
+                cursorMat.uniforms.uAlpha.value = mouseEntryAlpha;
+                particleMat.uniforms.uSpotlightRadius.value = spotlightR;
+
+                // Move cursor dot
+                if (smoothMouse.x > MOUSE_THRESHOLD && mouseEntryAlpha > 0.05) {
+                    cursorPoint.position.set(smoothMouse.x, smoothMouse.y, 0);
+                    cursorPoint.visible = true;
+                } else {
+                    cursorPoint.visible = false;
+                }
+
+                // Build web lines - one segment per nearby particle
+                let mIdx = 0;
+                if (showWeb && smoothMouse.x > MOUSE_THRESHOLD && mouseEntryAlpha > 0) {
+                    for (let i = 0; i < actualCount; i++) {
+                        const px = positions[i * 3];
+                        const py = positions[i * 3 + 1];
+                        const dx = px - smoothMouse.x;
+                        const dy = py - smoothMouse.y;
+                        const d = Math.sqrt(dx * dx + dy * dy);
+                        if (d >= connectDist) continue;
+                        const alpha = (1 - d / connectDist) * 0.9 * mouseEntryAlpha;
+                        const si = mIdx * 6;
+                        // Line start = cursor position
+                        mouseLinePositions[si] = smoothMouse.x;
+                        mouseLinePositions[si + 1] = smoothMouse.y;
+                        mouseLinePositions[si + 2] = 0;
+                        // Line end = particle position
+                        mouseLinePositions[si + 3] = px;
+                        mouseLinePositions[si + 4] = py;
+                        mouseLinePositions[si + 5] = 0;
+                        // Color & Alpha
+                        mouseLineColors[si] = _webColor.r;
+                        mouseLineColors[si + 1] = _webColor.g;
+                        mouseLineColors[si + 2] = _webColor.b;
+                        mouseLineColors[si + 3] = _webColor.r * alpha;
+                        mouseLineColors[si + 4] = _webColor.g * alpha;
+                        mouseLineColors[si + 5] = _webColor.b * alpha;
+                        mIdx++;
+                    }
+                }
+                mouseLineGeo.setDrawRange(0, mIdx * 2);
+                mouseLineGeo.attributes.position.needsUpdate = true;
+                mouseLineGeo.attributes.color.needsUpdate = true;
+                renderer.render(scene, camera);
+            },
+        });
+        loop.start();
+
+        // Cleanup
+        return () => {
+            reduceMotionMq?.removeEventListener?.("change", onReduceMotionChange);
+            loop.destroy();
+            resizeObserver?.disconnect();
+            window.removeEventListener("resize", handleResize);
+            window.removeEventListener("pointermove", onMove);
+            window.removeEventListener("pointerleave", onLeave);
+            window.removeEventListener("blur", onLeave);
+            document.removeEventListener("mouseleave", onLeave);
+            window.removeEventListener("touchmove", onTouch);
+            window.removeEventListener("touchend", onTouchEnd);
+            if (mount && mount.contains(renderer.domElement)) {
+                mount.removeChild(renderer.domElement);
+            }
+            renderer.dispose();
+            particleGeo.dispose();
+            particleMat.dispose();
+            cursorGeo.dispose();
+            cursorMat.dispose();
+            mouseLineGeo.dispose();
+            mouseLineMat.dispose();
+        };
+    }, [
+        particleCount,
+        gridGap,
+        particleSize,
+        mouseConnectDist,
+        spotlightRadius,
+        showWeb,
+        particlesGlow,
+        glowColor,
+        particleColor,
+        webColor,
+        centerColor,
+        baseAlpha,
+        baseScale,
+    ]);
+    // UI
+    const stats = [
+        { label: "Particles", value: particleCount },
+        { label: "Radius", value: spotlightRadius },
+        { label: "Reach", value: mouseConnectDist },
+    ];
+    return (<div
+      ref={mountRef}
+      className={className || "relative w-full h-screen bg-black overflow-hidden cursor-none max-md:cursor-default"}
+      style={style}
+    >
+      {showUI && (
+        <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-10">
+          {/* Top row */}
+          <div className="flex items-start pt-15 justify-between">
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-2 max-[1025px]:hidden">
+                <span className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${active ? "bg-emerald-400 shadow-[0_0_8px_#34d399]" : "bg-white/20"}`}/>
+                <span className={`text-sm tracking-widest uppercase transition-colors duration-500 ${active ? "text-white/50" : "text-white/20"}`}>
+                  {active ? "Tracking" : "Idle"}
+                </span>
+              </div>
+              <h1 className="text-4xl font-light text-white/90 tracking-tight leading-none">
+                Spider Web
+              </h1>
+              <p className="text-md text-white/30 tracking-wide">
+                Interactive particle field
+              </p>
+            </div>
+
+            <div className="flex gap-6 max-[1025px]:hidden">
+              {stats.map(({ label, value }) => (<div key={label} className="flex flex-col gap-0.5 text-right">
+                  <span className="text-sm uppercase tracking-widest text-white/25">
+                    {label}
+                  </span>
+                  <span className="text-lg font-light text-white/60 tabular-nums">
+                    {value}
+                  </span>
+                </div>))}
+            </div>
+          </div>
+
+          {/* Mobile overlay - desktop-only effect notice */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3 pointer-events-none select-none z-20 hidden max-[1025px]:flex w-full px-14 text-center">
+            <p className="text-white text-3xl font-light tracking-tight">
+              Open on desktop
+            </p>
+            <p className="text-base text-white/50 tracking-wide">
+              This effect is designed to be experienced with a cursor
+            </p>
+          </div>
+
+          {/* Bottom row */}
+          <div className="flex items-end justify-between max-[1025px]:hidden">
+            <div className={`transition-opacity duration-700 ${active ? "opacity-0" : "opacity-40"}`}>
+              <p className="text-sm text-white tracking-widest uppercase">
+                Move your cursor to explore
+              </p>
+              <div className="mt-1.5 w-8 h-px bg-white/20"/>
+            </div>
+
+            <div className={`flex flex-col gap-1 text-right transition-opacity duration-500 ${active ? "opacity-100" : "opacity-0"}`}>
+              <span className="text-sm uppercase tracking-widest text-white/25">
+                Position
+              </span>
+              <span className="font-mono text-md text-white/50 tracking-wider">
+                {Math.round(pos.x)} · {Math.round(pos.y)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>);
+}

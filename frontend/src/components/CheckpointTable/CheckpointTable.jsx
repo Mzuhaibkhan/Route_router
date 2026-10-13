@@ -41,7 +41,7 @@ export default function CheckpointTable({ route, riskLegend = {} }) {
       </button>
 
       {isOpen && (
-        <div className="table-scroll-wrapper">
+        <div className="table-scroll-wrapper" data-lenis-prevent>
           <table className="telemetry-table">
             <thead>
               <tr>

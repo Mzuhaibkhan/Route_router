@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import Lenis from "lenis";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Preloader from "./components/Preloader/Preloader";
 import Navbar from "./components/Navbar/Navbar";
 import Menu from "./components/Menu/Menu";
@@ -17,6 +19,9 @@ import { analyzeRoutes, fetchDemo } from "./services/api";
 
 import dallasHoustonFixture from "./fixtures/dallas_houston.json";
 import laPhoenixFixture from "./fixtures/la_phoenix.json";
+import RectangularTextReveal from "./components/Rectangular_text_reveal/Rectangular_text_reveal";
+import SpiderParticles from "./components/Spider-particles-background/Spider_particles";
+
 
 export default function App() {
   const [currentPath, setCurrentPath] = useState(() => {
@@ -39,6 +44,63 @@ export default function App() {
   const [analysisStage, setAnalysisStage] = useState(1);
   const [analysisData, setAnalysisData] = useState(dallasHoustonFixture);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSiteReady, setIsSiteReady] = useState(false);
+  const lenisRef = useRef(null);
+
+  // Initialize Lenis smooth scroll for the entire website
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let lenis;
+    try {
+      lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        orientation: "vertical",
+        gestureOrientation: "vertical",
+        smoothWheel: true,
+        wheelMultiplier: 1,
+        touchMultiplier: 1.5,
+        infinite: false,
+        autoRaf: true,
+        anchors: true,
+      });
+
+      lenisRef.current = lenis;
+      window.lenis = lenis;
+
+      // Sync Lenis with GSAP ScrollTrigger
+      lenis.on("scroll", () => {
+        try {
+          ScrollTrigger?.update?.();
+        } catch {
+          // ignore in testing
+        }
+      });
+    } catch {
+      // Graceful fallback for non-browser/test environments
+    }
+
+    return () => {
+      try {
+        lenis?.destroy();
+      } catch {}
+      lenisRef.current = null;
+      if (window.lenis === lenis) {
+        window.lenis = null;
+      }
+    };
+  }, []);
+
+  // Pause smooth scroll when mobile/fullscreen menu overlay is open
+  useEffect(() => {
+    if (!lenisRef.current) return;
+    if (isMenuOpen) {
+      lenisRef.current.stop();
+    } else {
+      lenisRef.current.start();
+    }
+  }, [isMenuOpen]);
 
   // Handle browser back and forward navigation
   useEffect(() => {
@@ -49,26 +111,38 @@ export default function App() {
     return () => window.removeEventListener("popstate", handlePop);
   }, []);
 
-  // Clean URL slug navigation
+  // Clean URL slug navigation with Lenis smooth scrolling
   function navigateTo(path) {
     if (path.startsWith("#")) {
       if (currentPath !== "/") {
         window.history.pushState({}, "", "/" + path);
         setCurrentPath("/");
         setTimeout(() => {
+          if (lenisRef.current) {
+            lenisRef.current.scrollTo(path, { offset: -88, duration: 1.2 });
+          } else {
+            const el = document.querySelector(path);
+            el?.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 120);
+      } else {
+        if (lenisRef.current) {
+          lenisRef.current.scrollTo(path, { offset: -88, duration: 1.2 });
+        } else {
           const el = document.querySelector(path);
           el?.scrollIntoView({ behavior: "smooth" });
-        }, 100);
-      } else {
-        const el = document.querySelector(path);
-        el?.scrollIntoView({ behavior: "smooth" });
+        }
       }
       return;
     }
 
     window.history.pushState({}, "", path);
     setCurrentPath(path);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(0, { immediate: true });
+    } else {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
   }
 
   // Handle analysis
@@ -160,7 +234,7 @@ export default function App() {
 
   return (
     <>
-      <Preloader />
+      <Preloader onComplete={() => setIsSiteReady(true)} />
 
       <Navbar
         isMenuOpen={isMenuOpen}
@@ -189,13 +263,40 @@ export default function App() {
             {/* Hero Section */}
             <header className="hero-section">
               <div className="container hero-container">
-                <span className="mono-sm hero-kicker">ATMOSPHERIC RADAR &bull; FLEET WEATHER RISK ENGINE</span>
-                <h1 className="hero-title">
-                  Precision answers for every mile of heavy ground a transport rig crosses.
-                </h1>
-                <p className="hero-subtitle">
-                  Pre-departure highway telemetry, 49-hour atmospheric radar, and dynamic load stability thresholds for commercial freight.
-                </p>
+                <div className="hero-text-card">
+                  <div className="hero-kicker-wrapper">
+                    <span className="mono-sm hero-kicker">ATMOSPHERIC RADAR &bull; FLEET WEATHER RISK ENGINE</span>
+                  </div>
+                  <RectangularTextReveal
+                    as="h1"
+                    className="hero-title"
+                    baseColor="#ffc32a"
+                    overlayColor="#171717"
+                    direction="bottom"
+                    ready={isSiteReady}
+                    coverDuration={0.4}
+                    revealDuration={0.5}
+                    overlayEnterDuration={0.35}
+                    overlayExitDuration={0.35}
+                  >
+                    Precision answers for every mile of heavy ground a transport rig crosses.
+                  </RectangularTextReveal>
+                  <RectangularTextReveal
+                    as="p"
+                    className="hero-subtitle"
+                    baseColor="#ffc32a"
+                    overlayColor="#171717"
+                    direction="bottom"
+                    ready={isSiteReady}
+                    delay={0.25}
+                    coverDuration={0.4}
+                    revealDuration={0.5}
+                    overlayEnterDuration={0.35}
+                    overlayExitDuration={0.35}
+                  >
+                    Pre-departure highway telemetry, 49-hour atmospheric radar, and dynamic load stability thresholds for commercial freight.
+                  </RectangularTextReveal>
+                </div>
               </div>
             </header>
 
@@ -271,6 +372,19 @@ export default function App() {
       </main>
 
       <footer className="footer-root">
+        <SpiderParticles
+          className="footer-particles-bg"
+          particleCount={120}
+          particleSize={16.0}
+          mouseConnectDist={140}
+          spotlightRadius={260}
+          particleColor={0xffc32a}
+          webColor={0xffc32a}
+          centerColor={0xffffff}
+          glowColor={0xffc32a}
+          particlesGlow={true}
+          showUI={false}
+        />
         <div className="container footer-inner">
           <div className="footer-left">
             <span className="mono-sm">
@@ -302,11 +416,14 @@ export default function App() {
               </button>
             </div>
           </div>
-          <span className="mono-sm" style={{ color: "var(--color-primary)" }}>
-            Engineered for Commercial Motor Carriers
-          </span>
+          <div className="footer-tagline-badge">
+            <span className="mono-sm" style={{ color: "var(--color-primary)" }}>
+              Engineered for Commercial Motor Carriers
+            </span>
+          </div>
         </div>
       </footer>
+
     </>
   );
 }
