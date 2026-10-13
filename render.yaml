@@ -17,5 +17,7 @@ services:
         generateValue: true
       - key: ORS_API_KEY
         sync: false
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ".onrender.com,localhost,127.0.0.1"
       - key: SECURE_SSL_REDIRECT
         value: "True"

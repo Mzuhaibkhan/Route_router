@@ -12,10 +12,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-dev-key-change-in-production')
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
-default_hosts = 'localhost,127.0.0.1,testserver,*.onrender.com'
-ALLOWED_HOSTS = [
-    h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', default_hosts).split(',') if h.strip()
-]
+raw_hosts = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver,.onrender.com')
+parsed_hosts = []
+for h in raw_hosts.split(','):
+    h = h.strip()
+    if not h:
+        continue
+    # Django wildcard subdomains must start with '.' (e.g. '.onrender.com'), not '*.'
+    if h.startswith('*.'):
+        h = h[1:]
+    parsed_hosts.append(h)
+
+render_hostname = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+if render_hostname and render_hostname not in parsed_hosts:
+    parsed_hosts.append(render_hostname)
+
+# Always ensure .onrender.com is present for Render deployments
+if '.onrender.com' not in parsed_hosts and '*' not in parsed_hosts:
+    parsed_hosts.append('.onrender.com')
+
+ALLOWED_HOSTS = parsed_hosts
 
 INSTALLED_APPS = [
     'django.contrib.auth',

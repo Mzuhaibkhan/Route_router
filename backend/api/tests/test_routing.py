@@ -90,7 +90,9 @@ class TestRoutingSuite:
         origin = Coord(lat=32.7767, lng=-96.7970)
         destination = Coord(lat=29.7604, lng=-95.3698)
 
-        with patch.object(provider, "_try_avoid_box", return_value=None), \
+        base_route = provider._mock_route_result(origin, destination, index=0)
+        with patch.object(provider, "_request_route", return_value=base_route), \
+             patch.object(provider, "_try_avoid_box", return_value=None), \
              patch.object(provider, "_try_waypoint_offset", return_value=None):
             routes = provider.get_routes(origin, destination, vehicle_params)
             assert len(routes) == 1
@@ -169,7 +171,11 @@ class TestRoutingSuite:
         origin = Coord(lat=32.7767, lng=-96.7970)
         destination = Coord(lat=32.8500, lng=-96.7500)
 
-        with patch.object(provider, "_try_avoid_box") as mock_avoid, \
+        base_route = provider._mock_route_result(origin, destination, index=0)
+        base_route.distance_miles = 10.0
+
+        with patch.object(provider, "_request_route", return_value=base_route), \
+             patch.object(provider, "_try_avoid_box") as mock_avoid, \
              patch.object(provider, "_try_waypoint_offset") as mock_waypoint:
             routes = provider.get_routes(origin, destination, vehicle_params)
             assert len(routes) == 1

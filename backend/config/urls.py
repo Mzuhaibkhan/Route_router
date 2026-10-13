@@ -28,7 +28,7 @@ def serve_robots(request):
 
 
 urlpatterns = [
-    path('healthz', lambda req: HttpResponse('OK', content_type='text/plain')),
+    re_path(r"^healthz/?$", lambda req: HttpResponse("OK", content_type="text/plain")),
     path("api/", include("api.urls")),
     path("sitemap.xml", serve_sitemap),
     path("robots.txt", serve_robots),
