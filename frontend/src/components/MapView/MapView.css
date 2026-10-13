@@ -4,6 +4,11 @@
   border-radius: var(--radius-md);
   overflow: hidden;
   margin-bottom: 2rem;
+  width: 100%;
+}
+
+.map-view-root[data-testid="leaflet-map"] {
+  max-width: 100%;
 }
 
 .map-view-header {
@@ -11,7 +16,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.75rem;
-  background: rgba(8, 8, 8, 0.7);
+  background: rgba(8, 8, 8, 0.85);
   border-bottom: 1px solid var(--color-medium-grey);
   flex-wrap: wrap;
   gap: 1rem;
@@ -50,107 +55,262 @@
 .map-canvas-container {
   position: relative;
   width: 100%;
-  height: 560px;
+  height: 600px;
   background: var(--color-surface-black);
 }
 
-.map-svg {
+.leaflet-map {
   width: 100%;
   height: 100%;
-  display: block;
+  background: #0d0d0d !important;
 }
 
-.metro-label {
-  fill: rgba(255, 255, 255, 0.25);
-  font-family: "JetBrains Mono", monospace;
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  text-anchor: middle;
+/* Dark mode styling for Leaflet base tiles (converts free OSM tiles to dark theme) */
+.leaflet-container {
+  font-family: inherit;
+  background-color: #0b0b0b !important;
 }
 
-.heatmap-cell {
-  transition: fill 0.3s ease;
+.leaflet-tile-pane {
+  filter: brightness(0.6) invert(1) contrast(2.8) hue-rotate(200deg) saturate(0.2) brightness(0.75);
 }
 
-.inactive-route-poly:hover {
-  stroke: rgba(255, 195, 42, 0.5);
-  stroke-width: 5;
+/* Side Zoom Controls (Top Right) */
+.leaflet-top.leaflet-right .leaflet-control-zoom {
+  margin-top: 1rem;
+  margin-right: 1rem;
+  border: 1px solid var(--color-medium-grey) !important;
+  border-radius: var(--radius-sm) !important;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6) !important;
 }
 
-.radar-ping {
-  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+.leaflet-control-zoom a {
+  background-color: rgba(18, 18, 18, 0.95) !important;
+  color: var(--color-primary) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
 }
 
-@keyframes ping {
-  0% { r: 6.5; opacity: 1; }
-  100% { r: 24; opacity: 0; }
+.leaflet-control-zoom a:hover {
+  background-color: var(--color-primary) !important;
+  color: #000000 !important;
 }
 
-.node-text {
-  fill: var(--color-mid-grey);
-  font-family: "JetBrains Mono", monospace;
-  font-size: 8.5px;
-  pointer-events: none;
+/* Quick Recenter & USA View Buttons on Map Side */
+.map-view-quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6rem;
+  margin-right: 1rem;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
-.truck-marker-group {
-  transition: transform 0.4s var(--ease-power4-out);
-}
-
-.checkpoint-popover {
-  position: absolute;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  width: min(360px, calc(100% - 3rem));
-  background: rgba(23, 23, 23, 0.95);
-  backdrop-filter: blur(16px);
+.map-action-btn {
+  background: rgba(18, 18, 18, 0.92);
+  color: var(--color-primary);
   border: 1px solid var(--color-medium-grey);
   border-radius: var(--radius-sm);
-  padding: 1.25rem;
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6);
-  z-index: 20;
+  padding: 0.45rem 0.65rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
 }
 
-.popover-header {
+.map-action-btn:hover {
+  background: var(--color-primary);
+  color: #000000;
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+/* Route Hover Tooltip */
+.route-hover-tooltip {
+  background: rgba(15, 15, 15, 0.95) !important;
+  border: 1px solid var(--color-primary) !important;
+  border-radius: var(--radius-sm) !important;
+  color: #ffffff !important;
+  padding: 0.5rem 0.75rem !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75) !important;
+}
+
+.route-hover-tooltip::before {
+  border-top-color: var(--color-primary) !important;
+}
+
+.route-tooltip-content {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+}
+
+.route-tooltip-content strong {
+  color: var(--color-primary);
+  font-size: 12px;
+}
+
+.route-tooltip-content .tooltip-action {
+  color: #a3a3a3;
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+/* Checkpoint Leaflet Popup Card */
+.leaflet-popup-content-wrapper {
+  background: rgba(18, 18, 18, 0.98) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--color-medium-grey) !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8) !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.leaflet-popup-tip {
+  background: rgba(18, 18, 18, 0.98) !important;
+  border: 1px solid var(--color-medium-grey) !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  width: 290px !important;
+}
+
+.popup-card {
+  padding: 1.1rem 1.25rem;
+}
+
+.popup-card-header {
   margin-bottom: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding-bottom: 0.5rem;
 }
 
-.popover-close-btn {
-  background: none;
-  border: none;
-  color: var(--color-mid-grey);
-  cursor: pointer;
-  font-size: 1rem;
+.popup-card-header h5 {
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+  color: #f5f5f5;
+  font-weight: 600;
 }
 
-.popover-grid {
+.popup-coords-block {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 0.5rem 0.65rem;
   margin-bottom: 0.75rem;
 }
 
-.popover-item {
+.coord-chip {
+  display: flex;
+  flex-direction: column;
+}
+
+.coord-label {
+  font-size: 9px;
+  color: var(--color-mid-grey);
+  letter-spacing: 0.08em;
+}
+
+.coord-val {
+  font-size: 11px;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.popup-weather-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.weather-item {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
 }
 
-.popover-item span {
+.weather-item span {
+  font-size: 9.5px;
   color: var(--color-mid-grey);
 }
 
-.popover-risk {
+.weather-item strong {
+  font-size: 12px;
+  font-family: "JetBrains Mono", monospace;
+  color: #e5e5e5;
+}
+
+.popup-risk-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding-top: 0.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.25rem;
+}
+
+.popup-risk-row span {
+  font-size: 10px;
+  color: var(--color-mid-grey);
+}
+
+.risk-pill-badge {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+}
+
+.popup-factors {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.factor-item {
+  font-size: 10px;
+  color: #f87171;
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* Checkpoint Tooltip */
+.checkpoint-tooltip {
+  background: rgba(10, 10, 10, 0.95) !important;
+  color: var(--color-primary) !important;
+  border: 1px solid rgba(255, 195, 42, 0.4) !important;
+  border-radius: 4px !important;
+  font-family: "JetBrains Mono", monospace !important;
+  font-size: 10px !important;
+  padding: 0.3rem 0.5rem !important;
+}
+
+.checkpoint-tooltip::before {
+  border-top-color: rgba(255, 195, 42, 0.4) !important;
 }
 
 @media (max-width: 768px) {
   .map-canvas-container {
-    height: 420px;
+    height: 440px;
   }
 }

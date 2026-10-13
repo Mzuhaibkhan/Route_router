@@ -192,7 +192,7 @@ export default function RouteForm({
           <div className="field-group">
             <label className="mono-sm">SAMPLING RESOLUTION</label>
             <div className="interval-buttons-row">
-              {["auto", "10", "25", "50"].map((opt) => (
+              {["auto", "10", "25", "50", "75", "100"].map((opt) => (
                 <button
                   key={opt}
                   type="button"

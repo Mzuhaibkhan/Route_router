@@ -44,8 +44,8 @@ def fetch_weather_batch(
     unique_snapped = list(dict.fromkeys([snap_coordinate(c) for c in coords]))
     results: dict[tuple[float, float], dict[int, WeatherReading]] = {}
 
-    # Batch in chunks of up to 50 coordinates
-    chunk_size = 50
+    # Batch in chunks of up to 100 coordinates
+    chunk_size = 100
     for i in range(0, len(unique_snapped), chunk_size):
         chunk = unique_snapped[i : i + chunk_size]
         lats = ",".join(str(c[0]) for c in chunk)

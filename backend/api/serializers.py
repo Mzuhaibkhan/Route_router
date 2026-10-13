@@ -84,7 +84,12 @@ class RouteAnalyzeSerializer(serializers.Serializer):
     departure_time = serializers.CharField(required=False, default=None)
     departure_utc = serializers.IntegerField(required=False, default=None)
     load_weight_lbs = serializers.IntegerField(required=False, default=40000)
-    checkpoint_interval_miles = serializers.IntegerField(required=False, default=25)
+    checkpoint_interval_miles = serializers.IntegerField(
+        required=False, default=25, allow_null=True
+    )
+    interval_miles = serializers.IntegerField(
+        required=False, default=None, allow_null=True
+    )
 
     def validate_load_weight_lbs(self, value):
         if not (1000 <= value <= 80000):
@@ -94,12 +99,19 @@ class RouteAnalyzeSerializer(serializers.Serializer):
         return value
 
     def validate_checkpoint_interval_miles(self, value):
-        if value not in (10, 25, 50):
+        if value is None or value not in (10, 25, 50, 75, 100):
             # Fall back to 25 mi
             return 25
         return value
 
     def validate(self, attrs):
+        # Support either interval_miles or checkpoint_interval_miles from payload
+        req_interval = attrs.get("interval_miles")
+        if req_interval in (10, 25, 50, 75, 100):
+            attrs["checkpoint_interval_miles"] = req_interval
+        elif attrs.get("checkpoint_interval_miles") is None:
+            attrs["checkpoint_interval_miles"] = 25
+
         origin_raw = attrs.get("origin")
         dest_raw = attrs.get("destination")
 
